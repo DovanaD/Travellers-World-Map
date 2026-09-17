@@ -1,21 +1,14 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Onde eu já fui</title>
+<title>Where Have I Been</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,user-scalable=no">
 <style>
   :root{
-    --bg:#12100e;
-    --ocean:#0d0b09;
-    --ink:#f2ece0;
-    --border:#0a0908;
-    --panel:#1e1a16;
-    --panel-line:#3a3228;
-    --muted:#9c8f7c;
-    --accent:#7fd4a8;
-    --pin:#ff2e4d;
-    --pin-dark:#8a0a1c;
+    --bg:#12100e; --ocean:#0d0b09; --ink:#f2ece0; --border:#0a0908;
+    --panel:#1e1a16; --panel-line:#3a3228; --muted:#9c8f7c;
+    --accent:#7fd4a8; --pin:#ff2e4d;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
@@ -33,25 +26,28 @@
   #mapwrap{position:absolute;top:50px;bottom:0;left:0;right:0;overflow:hidden}
   #map{display:block;width:100%;height:100%;background:var(--ocean);touch-action:none}
 
-  .country{stroke:var(--border);stroke-width:.6;vector-effect:non-scaling-stroke;
-    transition:filter .15s}
+  .country{stroke:var(--border);stroke-width:.6;vector-effect:non-scaling-stroke}
   .country.visited{stroke:#fff;stroke-width:1.4;filter:saturate(1.35) brightness(1.18)}
-  .graticule{fill:none;stroke:#ffffff;stroke-width:.35;stroke-opacity:.07;
+  .graticule{fill:none;stroke:#fff;stroke-width:.35;stroke-opacity:.07;
     vector-effect:non-scaling-stroke;pointer-events:none}
-  .sphere{fill:var(--ocean);stroke:#4a3f30;stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none}
+  .sphere{fill:var(--ocean);stroke:#4a3f30;stroke-width:1;
+    vector-effect:non-scaling-stroke;pointer-events:none}
 
   .pin{cursor:pointer}
-  .pin path.stem{fill:var(--pin);stroke:#ffffff;stroke-width:.9;vector-effect:non-scaling-stroke;
+  .pin path.stem{fill:var(--pin);stroke:#fff;stroke-width:.9;vector-effect:non-scaling-stroke;
     filter:drop-shadow(0 2px 3px rgba(0,0,0,.75))}
   .pin circle.dot{fill:#fff;pointer-events:none}
-
-  .press-ring{fill:none;stroke:var(--pin);stroke-width:2.5;pointer-events:none}
-  .press-core{fill:var(--pin);pointer-events:none;opacity:.35}
 
   .zoom{position:absolute;top:60px;right:8px;z-index:4;display:flex;flex-direction:column;gap:5px}
   .zoom button{width:36px;height:36px;background:var(--panel);color:var(--ink);
     border:1px solid var(--panel-line);border-radius:5px;font-size:18px;cursor:pointer;
     font-weight:600;display:flex;align-items:center;justify-content:center}
+
+  .dropmode{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);z-index:6;
+    background:var(--panel);border:1px solid var(--panel-line);color:var(--ink);
+    padding:9px 16px;border-radius:22px;font-family:inherit;font-size:13px;
+    cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.5);display:flex;align-items:center;gap:7px}
+  .dropmode.armed{background:var(--pin);color:#fff;border-color:var(--pin)}
 
   .popup{position:fixed;background:var(--panel);border:1px solid var(--panel-line);
     border-radius:8px;padding:12px;box-shadow:0 6px 20px rgba(0,0,0,.6);z-index:30;
@@ -104,7 +100,7 @@
     pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.4);
     transition:opacity .8s;white-space:nowrap}
   .hint.fade{opacity:0}
-  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  .toast{position:fixed;bottom:74px;left:50%;transform:translateX(-50%);
     background:var(--accent);color:#0d0b09;padding:9px 18px;border-radius:20px;
     font-size:13px;font-weight:600;z-index:40;box-shadow:0 4px 14px rgba(0,0,0,.5);
     opacity:0;transition:opacity .25s;pointer-events:none}
@@ -113,11 +109,11 @@
 </head>
 <body>
 <header>
-  <h1>Onde eu já fui</h1>
-  <div class="tools"><button id="listbtn" title="Lista">&#8801;</button></div>
+  <h1>Where Have I Been</h1>
+  <div class="tools"><button id="listbtn" title="List">&#8801;</button></div>
 </header>
 
-<div class="hint" id="hint">segura o dedo no mapa pra fixar um pin</div>
+<div class="hint" id="hint">press and hold on the map to drop a pin</div>
 
 <div id="mapwrap"><svg id="map" xmlns="http://www.w3.org/2000/svg"></svg></div>
 
@@ -127,11 +123,13 @@
   <button id="zreset" style="font-size:13px">&#10227;</button>
 </div>
 
+<button class="dropmode" id="dropmode">&#128205; <span id="dropmodetxt">Drop a pin</span></button>
+
 <div class="sheet" id="sheet">
-  <h2><span>Meus pins <span id="count" style="color:var(--muted);font-size:12px"></span></span><button id="closesheet">&times;</button></h2>
+  <h2><span>My pins <span id="count" style="color:var(--muted);font-size:12px"></span></span><button id="closesheet">&times;</button></h2>
   <div class="actions">
-    <button id="exportbtn">&darr; Exportar JSON</button>
-    <button id="importbtn">&uarr; Importar JSON</button>
+    <button id="exportbtn">&darr; Export JSON</button>
+    <button id="importbtn">&uarr; Import JSON</button>
     <input type="file" id="fileinput" accept="application/json" style="display:none">
   </div>
   <ul class="list" id="list"></ul>
@@ -145,7 +143,7 @@
 <script>
 (function(){
   'use strict';
-  var STORAGE_KEY = 'ondeeujafui.pins.v1';
+  var STORAGE_KEY = 'wherehaveibeen.pins.v1';
   var svg = d3.select('#map');
   var svgNode = svg.node();
   var wrap = document.getElementById('mapwrap');
@@ -154,122 +152,90 @@
   var geoms = topo.objects.countries.geometries;
   var countries = topojson.feature(topo, topo.objects.countries).features;
 
-  /* ---- Vibrant palette, graph-colored so no two neighbours share a hue ---- */
-  var PALETTE = [
-    '#FF5D73', /* coral */
-    '#26C6A6', /* teal */
-    '#FFC93C', /* amber */
-    '#8B6FE8', /* violet */
-    '#5CD65C', /* spring green */
-    '#FF8A3D', /* tangerine */
-    '#3D9BFF', /* azure */
-    '#F062C0'  /* magenta */
-  ];
+  var PALETTE = ['#FF5D73','#26C6A6','#FFC93C','#8B6FE8','#5CD65C','#FF8A3D','#3D9BFF','#F062C0'];
 
-  /* Symmetrize adjacency, drop self-loops */
+  /* --- Balanced graph colouring: no two neighbours share a hue --- */
   var N = countries.length, NP = PALETTE.length;
   var rawNb = topojson.neighbors(geoms);
-  var nb = [];
-  for(var i=0;i<N;i++) nb.push({});
+  var nb = []; for(var q=0;q<N;q++) nb.push({});
   rawNb.forEach(function(ns, i){
-    ns.forEach(function(n){
-      if(n >= 0 && n < N && n !== i){ nb[i][n] = 1; nb[n][i] = 1; }
-    });
+    ns.forEach(function(n){ if(n>=0 && n<N && n!==i){ nb[i][n]=1; nb[n][i]=1; } });
   });
   function nbList(i){ return Object.keys(nb[i]).map(Number); }
-
-  /* Balanced greedy colouring (Welsh-Powell order, least-used-colour tiebreak) */
-  var colorIdx = new Array(N).fill(-1);
-  var tally = new Array(NP).fill(0);
-  var order = [];
-  for(var i=0;i<N;i++) order.push(i);
-  order.sort(function(a,b){ return nbList(b).length - nbList(a).length || a - b; });
-
+  var colorIdx = new Array(N).fill(-1), tally = new Array(NP).fill(0), order=[];
+  for(var q2=0;q2<N;q2++) order.push(q2);
+  order.sort(function(a,b){ return nbList(b).length - nbList(a).length || a-b; });
   order.forEach(function(i){
-    var used = {};
-    nbList(i).forEach(function(n){ if(colorIdx[n] >= 0) used[colorIdx[n]] = 1; });
-    var best = -1, bestT = Infinity;
-    for(var c = 0; c < NP; c++){
-      if(used[c]) continue;
-      if(tally[c] < bestT){ bestT = tally[c]; best = c; }
-    }
-    if(best < 0){ best = tally.indexOf(Math.min.apply(null, tally)); }
-    colorIdx[i] = best; tally[best]++;
+    var used={}; nbList(i).forEach(function(n){ if(colorIdx[n]>=0) used[colorIdx[n]]=1; });
+    var best=-1,bestT=Infinity;
+    for(var c=0;c<NP;c++){ if(used[c])continue; if(tally[c]<bestT){bestT=tally[c];best=c;} }
+    if(best<0) best = tally.indexOf(Math.min.apply(null,tally));
+    colorIdx[i]=best; tally[best]++;
   });
-
-  /* Repair any residual adjacency collision */
-  for(var pass = 0; pass < 4; pass++){
-    var changed = false;
-    for(var i = 0; i < N; i++){
-      var used = {};
-      nbList(i).forEach(function(n){ used[colorIdx[n]] = 1; });
-      if(!used[colorIdx[i]]) continue;
-      for(var c = 0; c < NP; c++){
-        if(!used[c]){ tally[colorIdx[i]]--; colorIdx[i] = c; tally[c]++; changed = true; break; }
+  for(var pass=0;pass<4;pass++){
+    var changed=false;
+    for(var i2=0;i2<N;i2++){
+      var used2={}; nbList(i2).forEach(function(n){ used2[colorIdx[n]]=1; });
+      if(!used2[colorIdx[i2]]) continue;
+      for(var c2=0;c2<NP;c2++){
+        if(!used2[c2]){ tally[colorIdx[i2]]--; colorIdx[i2]=c2; tally[c2]++; changed=true; break; }
       }
     }
     if(!changed) break;
   }
-
-  function countryColor(i){ return PALETTE[colorIdx[i]]; }
   var colorByName = {};
-  countries.forEach(function(f, i){ colorByName[f.properties.name] = countryColor(i); });
+  countries.forEach(function(f,i){ colorByName[f.properties.name] = PALETTE[colorIdx[i]]; });
 
-  /* ---- Projection ---- */
+  /* --- Projection --- */
   var W = wrap.clientWidth, H = wrap.clientHeight;
-  svg.attr('viewBox', '0 0 ' + W + ' ' + H).attr('width', W).attr('height', H);
+  svg.attr('viewBox','0 0 '+W+' '+H).attr('width',W).attr('height',H);
   var projection = d3.geoEqualEarth();
   projection.fitExtent([[6,6],[W-6,H-6]], {type:'Sphere'});
   var path = d3.geoPath(projection);
 
   var gRoot = svg.append('g');
   var gSphere = gRoot.append('g');
-  var gLand   = gRoot.append('g');
-  var gGrat   = gRoot.append('g');
-  var gPins   = gRoot.append('g');
+  var gLand = gRoot.append('g');
+  var gGrat = gRoot.append('g');
+  var gPins = gRoot.append('g');
   var gOverlay = svg.append('g').style('pointer-events','none');
 
   gSphere.append('path').attr('class','sphere').attr('d', path({type:'Sphere'}));
-  gGrat.append('path').attr('class','graticule')
-    .attr('d', path(d3.geoGraticule().step([20,20])()));
-
-  gLand.selectAll('path.country')
-    .data(countries)
-    .join('path')
-    .attr('class','country')
-    .attr('d', path)
-    .attr('fill', function(d,i){ return countryColor(i); })
+  gGrat.append('path').attr('class','graticule').attr('d', path(d3.geoGraticule().step([20,20])()));
+  gLand.selectAll('path.country').data(countries).join('path')
+    .attr('class','country').attr('d', path)
+    .attr('fill', function(d,i){ return PALETTE[colorIdx[i]]; })
     .attr('data-name', function(d){ return d.properties.name; });
 
-  /* ---- Zoom ---- */
+  /* --- Zoom --- */
   var currentK = 1;
-  var zoom = d3.zoom()
-    .scaleExtent([1, 14])
-    .on('start', cancelPress)
+  var zoom = d3.zoom().scaleExtent([1,14])
     .on('zoom', function(e){
+      /* Do NOT hook 'start': d3 emits it on touchstart/mousedown before any
+         movement, which would abort every hold. 'zoom' only fires once the
+         transform actually changes, i.e. real pan/pinch. */
+      cancelPress();
       currentK = e.transform.k;
       gRoot.attr('transform', e.transform);
       gPins.selectAll('.pin').attr('transform', function(d){
-        var p = projection([d.lon, d.lat]);
-        return 'translate(' + p[0] + ',' + p[1] + ') scale(' + (1/currentK) + ')';
+        var p = projection([d.lon,d.lat]);
+        return 'translate('+p[0]+','+p[1]+') scale('+(1/currentK)+')';
       });
       closePopups();
     });
   svg.call(zoom).on('dblclick.zoom', null);
-
-  document.getElementById('zin').onclick    = function(){ svg.transition().call(zoom.scaleBy, 1.7); };
-  document.getElementById('zout').onclick   = function(){ svg.transition().call(zoom.scaleBy, 1/1.7); };
+  document.getElementById('zin').onclick = function(){ svg.transition().call(zoom.scaleBy,1.7); };
+  document.getElementById('zout').onclick = function(){ svg.transition().call(zoom.scaleBy,1/1.7); };
   document.getElementById('zreset').onclick = function(){ svg.transition().call(zoom.transform, d3.zoomIdentity); };
 
-  /* ---- Storage ---- */
+  /* --- Storage --- */
   var pins = [];
   try { pins = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){ pins = []; }
   function save(){
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(pins)); }
-    catch(e){ toast('Erro ao salvar'); }
+    catch(e){ toast('Could not save'); }
   }
 
-  /* ---- Pins ---- */
   function renderPins(){
     var sel = gPins.selectAll('.pin').data(pins, function(d){ return d.id; });
     sel.exit().remove();
@@ -280,131 +246,183 @@
     enter.append('title');
     var all = enter.merge(sel);
     all.attr('transform', function(d){
-      var p = projection([d.lon, d.lat]);
-      return 'translate(' + p[0] + ',' + p[1] + ') scale(' + (1/currentK) + ')';
+      var p = projection([d.lon,d.lat]);
+      return 'translate('+p[0]+','+p[1]+') scale('+(1/currentK)+')';
     });
-    all.select('title').text(function(d){ return d.city + (d.date ? ' \u00b7 ' + d.date : ''); });
-    all.on('click', function(event, d){ event.stopPropagation(); showInfo(event, d); });
+    all.select('title').text(function(d){ return d.city + (d.date ? ' \u00b7 '+d.date : ''); });
+    all.on('click', function(event,d){ event.stopPropagation(); showInfo(event,d); });
     updateVisited();
   }
 
   function updateVisited(){
     var visited = {};
     pins.forEach(function(p){
-      var c = countries.find(function(f){ return d3.geoContains(f, [p.lon, p.lat]); });
+      var c = countries.find(function(f){ return d3.geoContains(f,[p.lon,p.lat]); });
       if(c) visited[c.properties.name] = true;
     });
-    gLand.selectAll('path.country').classed('visited', function(d){
-      return !!visited[d.properties.name];
-    });
+    gLand.selectAll('path.country').classed('visited', function(d){ return !!visited[d.properties.name]; });
   }
 
-  /* ---- Long press detection ---- */
-  var HOLD_MS = 500, MOVE_TOL = 12;
-  var pressTimer = null, pressStart = null, ringSel = null, pressActive = false;
+  /* ================= PRESS-AND-HOLD =================
+     Touch Events, not Pointer Events: d3.zoom calls preventDefault()
+     on touchstart, which makes several mobile browsers emit
+     pointercancel immediately and would abort the hold. */
+  var HOLD_MS = 480, MOVE_TOL = 16;
+  var press = null;
+
+  function svgCoords(cx, cy){
+    var r = svgNode.getBoundingClientRect();
+    return [ (cx - r.left) / r.width * W, (cy - r.top) / r.height * H ];
+  }
+
+  function startPress(cx, cy){
+    cancelPress();
+    var xy = svgCoords(cx, cy);
+    var g = gOverlay.append('g').attr('transform','translate('+xy[0]+','+xy[1]+')');
+    var core = g.append('circle').attr('fill','#ff2e4d').attr('opacity',.3).attr('r',0);
+    var ring = g.append('circle').attr('fill','none').attr('stroke','#ff2e4d')
+      .attr('stroke-width',2.5).attr('r',34).attr('opacity',0);
+    press = { cx:cx, cy:cy, x:xy[0], y:xy[1], g:g, t0:performance.now(), raf:0, fired:false };
+    (function step(){
+      if(!press) return;
+      var t = Math.min(1, (performance.now() - press.t0) / HOLD_MS);
+      core.attr('r', 17 * t);
+      ring.attr('r', 34 - 17 * t).attr('opacity', t);
+      if(t >= 1){
+        press.fired = true;
+        var snap = press;
+        cancelPress();
+        firePress(snap);
+        return;
+      }
+      press.raf = requestAnimationFrame(step);
+    })();
+  }
 
   function cancelPress(){
-    if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; }
-    if(ringSel){ ringSel.remove(); ringSel = null; }
-    pressActive = false;
+    if(!press) return;
+    if(press.raf) cancelAnimationFrame(press.raf);
+    if(press.g) press.g.remove();
+    press = null;
   }
 
-  svgNode.addEventListener('pointerdown', function(ev){
-    if(ev.button !== undefined && ev.button !== 0 && ev.pointerType === 'mouse') return;
-    cancelPress();
-    closePopups();
-    var pt = d3.pointer(ev, svgNode);
-    pressStart = {x: pt[0], y: pt[1], cx: ev.clientX, cy: ev.clientY};
-    pressActive = true;
+  function movedTooFar(cx, cy){
+    if(!press) return false;
+    var dx = cx - press.cx, dy = cy - press.cy;
+    return (dx*dx + dy*dy) > (MOVE_TOL * MOVE_TOL);
+  }
 
-    /* growing ring feedback, drawn in screen space */
-    var g = gOverlay.append('g').attr('transform','translate('+pt[0]+','+pt[1]+')');
-    g.append('circle').attr('class','press-core').attr('r',0)
-      .transition().duration(HOLD_MS).ease(d3.easeQuadOut).attr('r',16);
-    g.append('circle').attr('class','press-ring').attr('r',30).attr('opacity',0)
-      .transition().duration(HOLD_MS).ease(d3.easeQuadOut)
-      .attr('r',17).attr('opacity',1);
-    ringSel = g;
+  /* IMPORTANT: d3-zoom calls nopropagation() -> stopImmediatePropagation()
+     inside its own touchstart/mousedown handlers. Any listener bound to the
+     SAME element after svg.call(zoom) is therefore never invoked. We bind on
+     the PARENT (#mapwrap) in the CAPTURE phase, which runs earlier in the
+     propagation path and is immune to that. */
+  var CAP = {capture:true, passive:true};
 
-    pressTimer = setTimeout(function(){
-      pressTimer = null;
-      if(!pressActive) return;
-      firePress(pressStart);
-      cancelPress();
-    }, HOLD_MS);
-  }, {passive:true});
+  /* touch */
+  wrap.addEventListener('touchstart', function(e){
+    if(e.touches.length !== 1){ cancelPress(); return; }
+    if(dropArmed){ return; }
+    var t = e.touches[0];
+    startPress(t.clientX, t.clientY);
+  }, CAP);
+  wrap.addEventListener('touchmove', function(e){
+    if(!press) return;
+    if(e.touches.length !== 1){ cancelPress(); return; }
+    var t = e.touches[0];
+    if(movedTooFar(t.clientX, t.clientY)) cancelPress();
+  }, CAP);
+  wrap.addEventListener('touchend', function(){ cancelPress(); }, CAP);
+  wrap.addEventListener('touchcancel', function(){ cancelPress(); }, CAP);
 
-  svgNode.addEventListener('pointermove', function(ev){
-    if(!pressActive || !pressStart) return;
-    var dx = ev.clientX - pressStart.cx, dy = ev.clientY - pressStart.cy;
-    if(Math.sqrt(dx*dx + dy*dy) > MOVE_TOL) cancelPress();
-  }, {passive:true});
-
-  ['pointerup','pointercancel','pointerleave'].forEach(function(t){
-    svgNode.addEventListener(t, cancelPress, {passive:true});
+  /* mouse */
+  wrap.addEventListener('mousedown', function(e){
+    if(e.button !== 0) return;
+    if(dropArmed) return;
+    startPress(e.clientX, e.clientY);
+  }, {capture:true});
+  window.addEventListener('mousemove', function(e){
+    if(press && movedTooFar(e.clientX, e.clientY)) cancelPress();
   });
+  window.addEventListener('mouseup', function(){ cancelPress(); });
   svgNode.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 
-  function firePress(start){
+  function firePress(p){
     var t = d3.zoomTransform(svgNode);
-    var px = (start.x - t.x) / t.k, py = (start.y - t.y) / t.k;
-    var ll = projection.invert([px, py]);
+    var px = (p.x - t.x) / t.k, py = (p.y - t.y) / t.k;
+    var ll;
+    try { ll = projection.invert([px, py]); } catch(err){ return; }
     if(!ll || isNaN(ll[0]) || isNaN(ll[1])) return;
     if(Math.abs(ll[1]) > 90 || Math.abs(ll[0]) > 180) return;
-    if(navigator.vibrate) navigator.vibrate(25);
+    if(navigator.vibrate) { try { navigator.vibrate(28); } catch(e){} }
     var c = countries.find(function(f){ return d3.geoContains(f, ll); });
-    openAdd(start.cx, start.cy, ll, c ? c.properties.name : null);
+    openAdd(p.cx, p.cy, ll, c ? c.properties.name : null);
     document.getElementById('hint').classList.add('fade');
   }
 
-  /* ---- Popups ---- */
+  /* --- Tap-to-drop fallback mode --- */
+  var dropArmed = false;
+  var dmBtn = document.getElementById('dropmode');
+  var dmTxt = document.getElementById('dropmodetxt');
+  dmBtn.onclick = function(){
+    dropArmed = !dropArmed;
+    dmBtn.classList.toggle('armed', dropArmed);
+    dmTxt.textContent = dropArmed ? 'Tap the map…' : 'Drop a pin';
+    cancelPress();
+    closePopups();
+  };
+  wrap.addEventListener('click', function(e){
+    if(!dropArmed) return;
+    var xy = svgCoords(e.clientX, e.clientY);
+    firePress({ x:xy[0], y:xy[1], cx:e.clientX, cy:e.clientY });
+    dropArmed = false;
+    dmBtn.classList.remove('armed');
+    dmTxt.textContent = 'Drop a pin';
+  });
+
+  /* --- Popups --- */
   var addPop = null, infoPop = null;
   function closePopups(){
     if(addPop){ addPop.remove(); addPop = null; }
     if(infoPop){ infoPop.remove(); infoPop = null; }
   }
-
   function place(pop, sx, sy){
     var r = pop.getBoundingClientRect();
-    var left = sx - r.width/2, top = sy - r.height - 26;
+    var left = sx - r.width/2, top = sy - r.height - 28;
     if(left < 8) left = 8;
     if(left + r.width > window.innerWidth - 8) left = window.innerWidth - r.width - 8;
-    if(top < 56) top = sy + 26;
+    if(top < 56) top = sy + 28;
     if(top + r.height > window.innerHeight - 8) top = window.innerHeight - r.height - 8;
-    pop.style.left = left + 'px';
-    pop.style.top = top + 'px';
+    if(top < 56) top = 56;
+    pop.style.left = left+'px'; pop.style.top = top+'px';
   }
 
   function openAdd(sx, sy, ll, countryName){
+    closePopups();
     var pop = document.createElement('div');
     pop.className = 'popup';
     var sw = countryName && colorByName[countryName]
-      ? '<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+colorByName[countryName]+';margin-right:5px"></span>'
-      : '';
+      ? '<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+colorByName[countryName]+';margin-right:5px"></span>' : '';
     pop.innerHTML =
-      '<div class="row"><input type="text" id="popcity" placeholder="Nome do lugar" autocomplete="off"></div>' +
+      '<div class="row"><input type="text" id="popcity" placeholder="Place name" autocomplete="off"></div>' +
       '<div class="row"><input type="month" id="popdate"></div>' +
-      '<div class="coord">' + sw + (countryName ? countryName + ' \u00b7 ' : '') +
-        ll[1].toFixed(2) + '\u00b0, ' + ll[0].toFixed(2) + '\u00b0</div>' +
-      '<div class="actions"><button id="popcancel">Cancelar</button>' +
-      '<button id="popadd" class="primary">Fixar</button></div>';
+      '<div class="coord">'+sw+(countryName ? countryName+' \u00b7 ' : '')+
+        ll[1].toFixed(2)+'\u00b0, '+ll[0].toFixed(2)+'\u00b0</div>' +
+      '<div class="actions"><button id="popcancel">Cancel</button>' +
+      '<button id="popadd" class="primary">Drop pin</button></div>';
     document.body.appendChild(pop);
     place(pop, sx, sy);
     addPop = pop;
-    setTimeout(function(){ document.getElementById('popcity').focus(); }, 60);
-
+    setTimeout(function(){ var el=document.getElementById('popcity'); if(el) el.focus(); }, 60);
     document.getElementById('popcancel').onclick = function(){ closePopups(); };
     function doAdd(){
       var city = document.getElementById('popcity').value.trim();
       var date = document.getElementById('popdate').value;
       if(!city){ document.getElementById('popcity').focus(); return; }
-      pins.push({
-        id: 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
-        city: city, date: date, lon: ll[0], lat: ll[1],
-        country: countryName || '', createdAt: Date.now()
-      });
-      save(); renderPins(); closePopups();
-      toast(city + ' fixado');
+      pins.push({ id:'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+        city:city, date:date, lon:ll[0], lat:ll[1],
+        country:countryName||'', createdAt:Date.now() });
+      save(); renderPins(); closePopups(); toast(city + ' pinned');
     }
     document.getElementById('popadd').onclick = doAdd;
     document.getElementById('popcity').addEventListener('keydown', function(e){
@@ -418,13 +436,11 @@
     var pop = document.createElement('div');
     pop.className = 'infopop';
     var sw = pin.country && colorByName[pin.country]
-      ? '<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+colorByName[pin.country]+';margin-right:5px"></span>'
-      : '';
-    pop.innerHTML =
-      '<div class="name">' + esc(pin.city) + '</div>' +
-      (pin.country ? '<div class="meta">' + sw + esc(pin.country) + '</div>' : '') +
-      (pin.date ? '<div class="meta">' + esc(pin.date) + '</div>' : '') +
-      '<button class="del">Remover pin</button>';
+      ? '<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+colorByName[pin.country]+';margin-right:5px"></span>' : '';
+    pop.innerHTML = '<div class="name">'+esc(pin.city)+'</div>' +
+      (pin.country ? '<div class="meta">'+sw+esc(pin.country)+'</div>' : '') +
+      (pin.date ? '<div class="meta">'+esc(pin.date)+'</div>' : '') +
+      '<button class="del">Remove pin</button>';
     document.body.appendChild(pop);
     place(pop, ev.clientX, ev.clientY);
     infoPop = pop;
@@ -434,32 +450,32 @@
     };
   }
 
-  document.addEventListener('pointerdown', function(e){
-    if(addPop && !addPop.contains(e.target) && e.target !== svgNode && !svgNode.contains(e.target)) closePopups();
-    if(infoPop && !infoPop.contains(e.target)) closePopups();
+  document.addEventListener('mousedown', function(e){
+    if(addPop && !addPop.contains(e.target) && !svgNode.contains(e.target)) closePopups();
+  }, true);
+  document.addEventListener('touchstart', function(e){
+    if(addPop && !addPop.contains(e.target) && !svgNode.contains(e.target)) closePopups();
   }, true);
 
-  /* ---- Sheet ---- */
+  /* --- Sheet --- */
   var sheet = document.getElementById('sheet');
   document.getElementById('listbtn').onclick = function(){ renderList(); sheet.classList.add('open'); };
   document.getElementById('closesheet').onclick = function(){ sheet.classList.remove('open'); };
 
   function renderList(){
     var ul = document.getElementById('list');
-    document.getElementById('count').textContent = pins.length ? '(' + pins.length + ')' : '';
-    if(!pins.length){ ul.innerHTML = '<li class="empty">nenhum pin ainda</li>'; return; }
+    document.getElementById('count').textContent = pins.length ? '('+pins.length+')' : '';
+    if(!pins.length){ ul.innerHTML = '<li class="empty">no pins yet</li>'; return; }
     var sorted = pins.slice().sort(function(a,b){
       return (b.date||'').localeCompare(a.date||'') || b.createdAt - a.createdAt;
     });
     ul.innerHTML = sorted.map(function(p){
       var col = colorByName[p.country] || '#777';
-      return '<li>' +
-        '<span class="place" data-goto="' + p.id + '">' +
-          '<span class="swatch" style="background:' + col + '"></span>' +
-          esc(p.city) + (p.country ? '<span class="date">, ' + esc(p.country) + '</span>' : '') +
-        '</span>' +
-        '<span class="date">' + (p.date || '') + '</span>' +
-        '<button data-id="' + p.id + '">&times;</button></li>';
+      return '<li><span class="place" data-goto="'+p.id+'">'+
+        '<span class="swatch" style="background:'+col+'"></span>'+esc(p.city)+
+        (p.country ? '<span class="date">, '+esc(p.country)+'</span>' : '')+'</span>'+
+        '<span class="date">'+(p.date||'')+'</span>'+
+        '<button data-id="'+p.id+'">&times;</button></li>';
     }).join('');
     ul.querySelectorAll('button[data-id]').forEach(function(b){
       b.onclick = function(){
@@ -472,20 +488,19 @@
         var p = pins.find(function(x){ return x.id === el.dataset.goto; });
         if(!p) return;
         sheet.classList.remove('open');
-        var xy = projection([p.lon, p.lat]);
-        var k = 4;
+        var xy = projection([p.lon,p.lat]);
         svg.transition().duration(600).call(zoom.transform,
-          d3.zoomIdentity.translate(W/2, H/2).scale(k).translate(-xy[0], -xy[1]));
+          d3.zoomIdentity.translate(W/2,H/2).scale(4).translate(-xy[0],-xy[1]));
       };
     });
   }
 
-  /* ---- Export / import ---- */
+  /* --- Export / import --- */
   document.getElementById('exportbtn').onclick = function(){
-    var blob = new Blob([JSON.stringify(pins, null, 2)], {type:'application/json'});
+    var blob = new Blob([JSON.stringify(pins,null,2)],{type:'application/json'});
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
-    a.href = url; a.download = 'onde-eu-ja-fui.json'; a.click();
+    a.href = url; a.download = 'where-have-i-been.json'; a.click();
     setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
   };
   document.getElementById('importbtn').onclick = function(){ document.getElementById('fileinput').click(); };
@@ -495,23 +510,20 @@
     r.onload = function(){
       try {
         var data = JSON.parse(r.result);
-        if(!Array.isArray(data)) throw new Error('formato inválido');
-        var map = {};
-        pins.forEach(function(p){ map[p.id] = p; });
+        if(!Array.isArray(data)) throw new Error('bad format');
+        var map = {}; pins.forEach(function(p){ map[p.id]=p; });
         var n = 0;
         data.forEach(function(p){
-          if(p && p.id && p.city && p.lat != null && p.lon != null){ map[p.id] = p; n++; }
+          if(p && p.id && p.city && p.lat!=null && p.lon!=null){ map[p.id]=p; n++; }
         });
         pins = Object.keys(map).map(function(k){ return map[k]; });
-        save(); renderPins(); renderList();
-        toast(n + ' pins importados');
-      } catch(err){ toast('Erro: ' + err.message); }
+        save(); renderPins(); renderList(); toast(n+' pins imported');
+      } catch(err){ toast('Error: '+err.message); }
     };
     r.readAsText(file);
     e.target.value = '';
   };
 
-  /* ---- Util ---- */
   function esc(s){
     return String(s).replace(/[&<>"']/g, function(c){
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
@@ -519,15 +531,14 @@
   }
   var toastEl = document.getElementById('toast'), toastTimer;
   function toast(msg){
-    toastEl.textContent = msg;
-    toastEl.classList.add('show');
+    toastEl.textContent = msg; toastEl.classList.add('show');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 1800);
   }
 
   window.addEventListener('resize', function(){
     W = wrap.clientWidth; H = wrap.clientHeight;
-    svg.attr('viewBox','0 0 ' + W + ' ' + H).attr('width', W).attr('height', H);
+    svg.attr('viewBox','0 0 '+W+' '+H).attr('width',W).attr('height',H);
     projection.fitExtent([[6,6],[W-6,H-6]], {type:'Sphere'});
     gSphere.select('path').attr('d', path({type:'Sphere'}));
     gGrat.select('path').attr('d', path(d3.geoGraticule().step([20,20])()));
